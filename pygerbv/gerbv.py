@@ -2,6 +2,7 @@
 
 from ctypes import *
 from ctypes.util import find_library
+from pathlib import Path
 import platform
 import tempfile
 
@@ -13,6 +14,10 @@ from .structure import *
 library_path = find_library('gerbv')
 if not library_path:
     raise ModuleNotFoundError
+local_lib = Path("/usr/local/lib")
+local_library = local_lib / library_path
+if local_library.is_file():
+    _libgerbv = CDLL(local_library)
 else:
     _libgerbv = CDLL(library_path)
 
