@@ -114,7 +114,6 @@ class Image:
         # できれば効率よくしたいけども...
         with tempfile.NamedTemporaryFile() as f:
             self.export_rs274x_file(f.name, None)
-            file_info = p.open_layer_from_filename(f.name)
             for x, y in positions:
                 t = GerbvUserTransformation(
                     x + translate[0],
@@ -126,6 +125,7 @@ class Image:
                     False,
                     False
                 )
+                file_info = p.open_layer_from_filename(f.name)
                 _libgerbv.gerbv_image_copy_image(file_info.image._image, t, new_image)
         self._image = new_image
 
@@ -254,11 +254,11 @@ class Project:
             render_info = self._generate_render_info(size)
             _libgerbv.gerbv_export_pdf_file_from_project(self._project, render_info, filename.encode('utf-8'))
 
-    def export_png_file(self, filename, size):
+    def export_png_file(self, filename, size, dpi=72, origin=[0, 0]):
         if self.files_loaded() == 0:
             raise GerberNotFoundError
         else:
-            render_info = self._generate_render_info(size)
+            render_info = self._generate_render_info(size, dpi=dpi, origin=origin)
             _libgerbv.gerbv_export_png_file_from_project(self._project, render_info, filename.encode('utf-8'))
 
     def export_auto_sized_svg_file(self, filename):
@@ -315,8 +315,8 @@ class Project:
         """Returns the number of loaded files"""
         return self._project.last_loaded + 1
 
-    def _generate_render_info(self, size, dpi=72):
-        return GerbvRenderInfo(dpi, dpi, 0, 0, 3, int(size[0] * dpi), int(size[1] * dpi))
+    def _generate_render_info(self, size, dpi=72, origin=[0, 0]):
+        return GerbvRenderInfo(dpi, dpi, origin[0], origin[1], 3, int(size[0] * dpi), int(size[1] * dpi))
 
     def _generate_auto_sized_render_info(self, dpi=72):
         margin = 0.1
